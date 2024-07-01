@@ -1,0 +1,6 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ProLibrary_pcs_2024-05-14")(type "EasyEDA (JLCEDA) Pro")(uri "D:/pppc-usb-hub/PCB/libraries/ProLibrary_pcs_2024-05-14.elibz")(options "")(descr ""))
+  (lib (name "SCH_New-Project_2024-05-15")(type "EasyEDA (JLCEDA) Std")(uri "D:/pppc-usb-hub/PCB/libraries/SCH_New-Project_2024-05-15.json")(options "")(descr ""))
+  (lib (name "SCHLIB_TYPE-C-16PIN-2MD(073)_2024-05-18")(type "EasyEDA (JLCEDA) Std")(uri "D:/pppc-usb-hub/PCB/libraries/SCHLIB_TYPE-C-16PIN-2MD(073)_2024-05-18.json")(options "")(descr ""))
+)

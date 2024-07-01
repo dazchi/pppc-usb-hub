@@ -1,0 +1,14 @@
+# Eclipse
+.metadata
+.settings
+[Rr]elease
+[Dd]ebug
+.launch
+*.bak
+
+# Others
+*.rar
+*.zip
+*.exe
+*.o
+*.xslx

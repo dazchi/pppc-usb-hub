@@ -1,0 +1,36 @@
+{
+  "editorVersion": "6.5.42",
+  "docType": "5",
+  "title": "New Project",
+  "description": "",
+  "colors": {},
+  "schematics": [
+    {
+      "docType": "1",
+      "title": "Sheet_1",
+      "description": "",
+      "dataStr": {
+        "head": {
+          "docType": "1",
+          "editorVersion": "6.5.42",
+          "newgId": true,
+          "c_para": {
+            "Prefix Start": "1"
+          },
+          "c_spiceCmd": null
+        },
+        "canvas": "CA~1000~1000~#FFFFFF~yes~#CCCCCC~5~1000~1000~line~5~pixel~5~0~0",
+        "shape": [
+          "LIB~0~10~package`SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR`Supplier`LCSC`Manufacturer`西安航天民芯`Manufacturer Part`MT9700`Supplier Part`C89855`JLCPCB Part Class`Extended Part`spicePre`U`spiceSymbolName`MT9700`~~0~gge88cadc747b73f1fb~e7f085e4f71344109c090040716070ab~12b08cba9ff2487eb912c46d427557f6~0~~yes~yes~~1677581448~#@$T~N~-5.96875~-13~0~#000080~Arial~~~~~comment~MT9700~1~start~gge7~0~#@$T~P~-5.96875~-22~0~#000080~Arial~~~~~comment~U1~1~start~gge16~0~#@$R~-30~-10~2~2~60~40~#880000~1~0~none~gge25~0~#@$P~show~0~1~-50~0~0~gge28~0^^-50~0^^M -50 0 h 20~#880000^^1~-28~3~0~VOUT~start~~~#0000FF^^1~-35~-1~0~1~end~~~#0000FF^^0~-27~0^^0~M -30 -3 L -33 0 L -30 3#@$P~show~0~2~-50~10~0~gge49~0^^-50~10^^M -50 10 h 20~#880000^^1~-28~13~0~GND~start~~~#0000FF^^1~-35~9~0~2~end~~~#0000FF^^0~-27~10^^0~M -30 7 L -33 10 L -30 13#@$P~show~0~3~-50~20~0~gge70~0^^-50~20^^M -50 20 h 20~#880000^^1~-28~23~0~SET~start~~~#0000FF^^1~-35~19~0~3~end~~~#0000FF^^0~-27~20^^0~M -30 17 L -33 20 L -30 23#@$P~show~0~4~50~20~180~gge91~0^^50~20^^M 50 20 h -20~#880000^^1~28~23~0~EN~end~~~#0000FF^^1~35~19~0~4~start~~~#0000FF^^0~27~20^^0~M 30 23 L 33 20 L 30 17#@$P~show~0~5~50~0~180~gge112~0^^50~0^^M 50 0 h -20~#880000^^1~28~3~0~VIN~end~~~#0000FF^^1~35~-1~0~5~start~~~#0000FF^^0~27~0^^0~M 30 3 L 33 0 L 30 -3"
+        ],
+        "BBox": {
+          "x": -51,
+          "y": -30.4,
+          "width": 102,
+          "height": 60.4
+        },
+        "colors": {}
+      }
+    }
+  ]
+}

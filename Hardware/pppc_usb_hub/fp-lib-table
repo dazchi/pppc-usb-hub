@@ -1,0 +1,11 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "PCBLIB_USB-C-SMD_TYPE-C-6PIN-2MD-073_2024-05-18")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_USB-C-SMD_TYPE-C-6PIN-2MD-073_2024-05-18.json")(options "")(descr ""))
+  (lib (name "PCBLIB_SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR_2024-05-18")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR_2024-05-18.json")(options "")(descr ""))
+  (lib (name "PCBLIB_OSC-SMD_4P-L3.2-W2.5-BL_2024-05-18")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_OSC-SMD_4P-L3.2-W2.5-BL_2024-05-18.json")(options "")(descr ""))
+  (lib (name "PCBLIB_CONN-TH_3P-P5.08_DB128L-5.08-3P-OG-S_2024-05-19")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_CONN-TH_3P-P5.08_DB128L-5.08-3P-OG-S_2024-05-19.json")(options "")(descr ""))
+  (lib (name "PCBLIB_SW-SMD_L6.0-W3.3-LS8.0_2024-05-19")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_SW-SMD_L6.0-W3.3-LS8.0_2024-05-19.json")(options "")(descr ""))
+  (lib (name "PCBLIB_USB-A-TH_USB-M-22_2024-05-19")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_USB-A-TH_USB-M-22_2024-05-19.json")(options "")(descr ""))
+  (lib (name "PCBLIB_USB-A-TH_AF-10.0-HC6.3_2024-05-20")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_USB-A-TH_AF-10.0-HC6.3_2024-05-20.json")(options "")(descr ""))
+  (lib (name "PCBLIB_SW-SMD_GT-TC020B-H035-L05_2024-05-21")(type "EasyEDA / JLCEDA Std")(uri "D:/pppc-usb-hub/PCB/libraries/PCBLIB_SW-SMD_GT-TC020B-H035-L05_2024-05-21.json")(options "")(descr ""))
+)
