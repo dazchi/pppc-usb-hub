@@ -20,9 +20,9 @@ while True:
             print('Opening Port: {}'.format(port.name))
             ser = serial.Serial(port.name)        
             ser.write(OPEN_CMD)
-            time.sleep(0.05)
+            time.sleep(0.3)
             ser.write(CLOSE_CMD)
-            time.sleep(0.05)
+            time.sleep(0.3)
             print('Closing Port')
             ser.close()
         except Exception as ex:

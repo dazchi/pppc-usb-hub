@@ -32,6 +32,19 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+typedef struct PortSettings {
+	uint8_t defaultState :1;
+	uint8_t groupControl :1;
+	uint8_t polarity :1;
+	uint8_t reserved :5;
+} __attribute__((packed)) PortSettings_t;
+
+typedef struct DeviceSettings {
+	PortSettings_t usb1;
+	PortSettings_t usb2;
+	PortSettings_t usb3;
+	PortSettings_t relay;
+} __attribute__((packed)) DeviceSettings_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -48,17 +61,25 @@
 
 /* USER CODE BEGIN PV */
 extern TIM_HandleTypeDef htim3;
-uint8_t CDC_Rx_Buffer[64] = { 0 };
-uint8_t rx_count = 0;
-uint8_t IO_state = 0;
-volatile uint8_t IO_Ctrl_Flag = 0x00;
+uint8_t cdcRxBuf[64] = { 0 };
+uint8_t rxLen = 0;
+uint8_t portCtrlState = 0;
+uint8_t portCtrlFlag = 0x00;
+
+__attribute__((section(".persist_data"))) DeviceSettings_t Settings = {
+		.usb1 =		{ .defaultState = 1, .groupControl = 1, .polarity = 0 },
+		.usb2 = 	{ .defaultState = 1, .groupControl = 1, .polarity = 0 },
+		.usb3 = 	{ .defaultState = 1, .groupControl = 1, .polarity = 0 },
+		.relay = 	{ .defaultState = 0, .groupControl = 1, .polarity = 1 },
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void Enable_All_IOs();
-void Disable_All_IOs();
+void Initialize_Ports();
+void Enable_All_Ports();
+void Disable_All_Ports();
 
 /* USER CODE END PFP */
 
@@ -68,181 +89,234 @@ void Disable_All_IOs();
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
-int main(void) {
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
 
-	/* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
+  /* USER CODE END 1 */
 
-	/* USER CODE END 1 */
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE END Init */
 
-	/* USER CODE END Init */
+  /* Configure the system clock */
+  SystemClock_Config();
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* USER CODE BEGIN SysInit */
 
-	/* USER CODE BEGIN SysInit */
+  /* USER CODE END SysInit */
 
-	/* USER CODE END SysInit */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_USART2_UART_Init();
+  MX_USB_DEVICE_Init();
+  MX_TIM3_Init();
+  /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim3);
+  Initialize_Ports();
+  /* USER CODE END 2 */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_DMA_Init();
-	MX_USART2_UART_Init();
-	MX_USB_DEVICE_Init();
-	MX_TIM3_Init();
-	/* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim3);
-	Enable_All_IOs();
-	/* USER CODE END 2 */
-
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 
 	while (1) {
-		if (HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_channel1,
-				HAL_DMA_FULL_TRANSFER, 100) == HAL_OK) {
-			uint32_t temp = *((uint32_t*) CDC_Rx_Buffer);
-			if (temp == 0xA20101A0) {
-				Disable_All_IOs();
-			} else if (temp == 0xA10001A0) {
-				Enable_All_IOs();
-			}
-		}
 
-		/* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
 	}
-	/* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
-void SystemClock_Config(void) {
-	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
-	RCC_PeriphCLKInitTypeDef PeriphClkInit = { 0 };
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-	/** Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
-	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48;
-	RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		Error_Handler();
-	}
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48;
+  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Initializes the CPU, AHB and APB buses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
-			| RCC_CLOCKTYPE_PCLK1;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI48;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI48;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
-		Error_Handler();
-	}
-	PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
-	PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
+  PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
 
-	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-		Error_Handler();
-	}
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */
 
-void Enable_All_IOs() {
-
-	IO_Ctrl_Flag = 0x11;
-	IO_state = 0x01;
+void Initialize_Ports()
+{
+	portCtrlFlag = 0xF1;
+	portCtrlState = 0x01;
 }
 
-void Disable_All_IOs() {
+void Enable_All_Ports() {
 
-	IO_Ctrl_Flag = 0x01;
-    IO_state = 0x00;
+	portCtrlFlag = 0x11;
+	portCtrlState = 0x01;
 }
 
-void IO_Ctrl_Handler() {
+void Disable_All_Ports() {
+
+	portCtrlFlag = 0x01;
+	portCtrlState = 0x00;
+}
+
+void Port_Ctrl_Handler() {
 	static uint8_t cooldown = 0;
 
-	if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) && (cooldown == 0))
-	{
-		if(IO_state){
-			Disable_All_IOs();
-		}else{
-			Enable_All_IOs();
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) && (cooldown == 0)) {
+		if (portCtrlState) {
+			Disable_All_Ports();
+		} else {
+			Enable_All_Ports();
 		}
 		cooldown = 10;
 	}
 
-	switch (IO_Ctrl_Flag) {
+	switch (portCtrlFlag) {
 	case 0x01:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-		IO_Ctrl_Flag += 1;
+		if(Settings.usb1.groupControl){
+			HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, Settings.usb1.polarity & 0x1);
+		}
+		portCtrlFlag += 1;
 		break;
 	case 0x02:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-		IO_Ctrl_Flag += 1;
+		if(Settings.usb2.groupControl){
+			HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, Settings.usb2.polarity & 0x1);
+		}
+		portCtrlFlag += 1;
 		break;
 	case 0x03:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
-		IO_Ctrl_Flag += 1;
+		if(Settings.usb3.groupControl){
+			HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, Settings.usb3.polarity & 0x1);
+		}
+		portCtrlFlag += 1;
 		break;
 	case 0x04:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
-		IO_Ctrl_Flag = 0x00;
+		if(Settings.relay.groupControl){
+			HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, Settings.relay.polarity & 0x1);
+		}
+		portCtrlFlag = 0x00;
 		break;
 	case 0x11:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-		IO_Ctrl_Flag += 1;
+		if(Settings.usb1.groupControl){
+			HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, ~Settings.usb1.polarity & 0x1);
+		}
+		portCtrlFlag += 1;
 		break;
 	case 0x12:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-		IO_Ctrl_Flag += 1;
+		if(Settings.usb2.groupControl){
+			HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, ~Settings.usb2.polarity & 0x1);
+		}
+		portCtrlFlag += 1;
 		break;
 	case 0x13:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
-		IO_Ctrl_Flag += 1;
+		if(Settings.usb3.groupControl){
+			HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, ~Settings.usb3.polarity & 0x1);
+		}
+		portCtrlFlag += 1;
 		break;
 	case 0x14:
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-		IO_Ctrl_Flag = 0x00;
+		if(Settings.relay.groupControl){
+			HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, ~Settings.relay.polarity & 0x1);
+		}
+		portCtrlFlag = 0x00;
+		break;
+	case 0xF1:
+		HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, Settings.usb1.defaultState);
+		portCtrlFlag += 1;
+		break;
+	case 0xF2:
+		HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, Settings.usb2.defaultState);
+		portCtrlFlag += 1;
+		break;
+	case 0xF3:
+		HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, Settings.usb3.defaultState);
+		portCtrlFlag += 1;
+		break;
+	case 0xF4:
+		HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, Settings.relay.defaultState);
+		portCtrlFlag = 0x00;
 		break;
 	default:
-		IO_Ctrl_Flag = 0x00;
+		portCtrlFlag = 0x00;
 		break;
 	}
 
 	cooldown -= cooldown ? 1 : 0;
 }
+
+void CDC_Process_Rx()
+{
+	uint32_t command = 0xFFFFFFFF;
+
+	command = *((uint32_t*) cdcRxBuf);
+
+	switch(command){
+	case 0xA20101A0:
+		Disable_All_Ports();
+		break;
+	case 0xA10001A0:
+		Enable_All_Ports();
+		break;
+	default:
+		break;
+	}
+
+}
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
-void Error_Handler(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 	__disable_irq();
 	while (1) {
 	}
-	/* USER CODE END Error_Handler_Debug */
+  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT

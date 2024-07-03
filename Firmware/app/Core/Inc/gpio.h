@@ -33,6 +33,10 @@ extern "C" {
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
+#define USB1_EN_PIN GPIO_PIN_4
+#define USB2_EN_PIN GPIO_PIN_5
+#define USB3_EN_PIN GPIO_PIN_6
+#define RELAY_EN_PIN GPIO_PIN_7
 
 /* USER CODE END Private defines */
 
