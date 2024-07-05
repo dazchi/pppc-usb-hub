@@ -41,12 +41,12 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+extern uint8_t rxDone;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 extern void Port_Ctrl_Handler();
-extern void CDC_Process_Rx();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -155,7 +155,7 @@ void DMA1_Channel1_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
 
   if(hdma_memtomem_dma1_channel1.ErrorCode == HAL_DMA_ERROR_NONE){
-	  CDC_Process_Rx();
+	  rxDone = 1;
   }
   /* USER CODE END DMA1_Channel1_IRQn 1 */
 }

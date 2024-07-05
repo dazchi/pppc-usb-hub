@@ -45,6 +45,25 @@ typedef struct DeviceSettings {
 	PortSettings_t usb3;
 	PortSettings_t relay;
 } __attribute__((packed)) DeviceSettings_t;
+
+typedef struct Command {
+	union{
+		uint32_t raw;
+		struct{
+			uint8_t header;
+			uint8_t addr;
+			uint8_t state;
+			uint8_t checksum;
+		};
+	};
+
+} __attribute__((packed)) Command_t;
+
+typedef struct CommandExtended {
+	Command_t command;
+	DeviceSettings_t settings;
+	uint8_t checksum;
+} __attribute__((packed)) CommandExtended_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -54,7 +73,6 @@ typedef struct DeviceSettings {
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,7 +80,9 @@ typedef struct DeviceSettings {
 /* USER CODE BEGIN PV */
 extern TIM_HandleTypeDef htim3;
 uint8_t cdcRxBuf[64] = { 0 };
+uint8_t cdcTxBuf[8] = { 0 };
 uint8_t rxLen = 0;
+volatile uint8_t rxDone = 0;
 uint8_t portCtrlState = 0;
 uint8_t portCtrlFlag = 0x00;
 
@@ -77,10 +97,13 @@ __attribute__((section(".persist_data"))) DeviceSettings_t Settings = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+extern void FLASH_PageErase(uint32_t PageAddress);
 void Initialize_Ports();
 void Enable_All_Ports();
 void Disable_All_Ports();
-
+uint8_t Calculate_Checksum(void* data, uint8_t len);
+void Process_Rx();
+uint8_t Save_Settings(DeviceSettings_t* newSettings);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -129,7 +152,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
 	while (1) {
-
+		if(rxDone){
+			Process_Rx();
+		}
 
     /* USER CODE END WHILE */
 
@@ -285,24 +310,124 @@ void Port_Ctrl_Handler() {
 	cooldown -= cooldown ? 1 : 0;
 }
 
-void CDC_Process_Rx()
+void Process_Rx()
 {
-	uint32_t command = 0xFFFFFFFF;
+	Command_t *cmd;
+	CommandExtended_t *cmdExt;
 
-	command = *((uint32_t*) cdcRxBuf);
+	cmd = (Command_t*)cdcRxBuf;
 
-	switch(command){
-	case 0xA20101A0:
-		Disable_All_Ports();
-		break;
-	case 0xA10001A0:
-		Enable_All_Ports();
-		break;
-	default:
-		break;
+	if(cmd->checksum == Calculate_Checksum(cmd, sizeof(*cmd)-1))
+	{
+		switch(cmd->raw){
+		case 0xA20101A0:
+			Disable_All_Ports();
+			break;
+		case 0xA10001A0:
+			Enable_All_Ports();
+			break;
+		case 0x67EFCDAB:
+			cmdExt = (CommandExtended_t*)cdcRxBuf;
+
+			if(cmdExt->checksum == Calculate_Checksum(cmdExt, sizeof(*cmdExt)-1))
+			{
+				uint8_t result = Save_Settings(&cmdExt->settings);
+
+				if(result)
+				{
+					CDC_Transmit_FS("SUCCESS\n", 8);
+				}else
+				{
+					CDC_Transmit_FS("FAILED\n", 7);
+				}
+				break;
+			}
+			break;
+		case 0xFDFFFFFF:
+			cdcTxBuf[0] = HAL_GPIO_ReadPin(GPIOA, RELAY_EN_PIN);
+			cdcTxBuf[0] <<= 1;
+			cdcTxBuf[0] |= HAL_GPIO_ReadPin(GPIOA, USB3_EN_PIN);
+			cdcTxBuf[0] <<= 1;
+			cdcTxBuf[0] |= HAL_GPIO_ReadPin(GPIOA, USB2_EN_PIN);
+			cdcTxBuf[0] <<= 1;
+			cdcTxBuf[0] |= HAL_GPIO_ReadPin(GPIOA, USB1_EN_PIN);
+
+			memcpy(cdcTxBuf+1,&Settings,sizeof(Settings));
+
+			CDC_Transmit_FS(cdcTxBuf, sizeof(Settings)+1);
+			break;
+		default:
+			if(cmd->header == 0xF0)
+			{
+				switch(cmd->addr){
+				case 0x01:
+					HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, cmd->state & 0x1);
+					break;
+				case 0x02:
+					HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, cmd->state & 0x1);
+					break;
+				case 0x03:
+					HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, cmd->state & 0x1);
+					break;
+				case 0x04:
+					HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, cmd->state & 0x1);
+					break;
+				default:
+					break;
+				}
+			}
+			break;
+		}
 	}
 
+	memset(cdcRxBuf, 0, 64);
+	rxDone = 0;
 }
+
+uint8_t Calculate_Checksum(void* data, uint8_t len){
+	uint8_t i = 0;
+	uint8_t sum = 0;
+
+	do
+	{
+		sum += ((uint8_t*)data)[i];
+		i++;
+	}while(i<len);
+
+	return sum;
+}
+
+
+uint8_t Save_Settings(DeviceSettings_t* newSettings){
+	static FLASH_EraseInitTypeDef EraseInitStruct;
+	uint32_t PAGEError;
+	HAL_StatusTypeDef status = HAL_OK;
+
+	EraseInitStruct.TypeErase   = FLASH_TYPEERASE_PAGES;
+    EraseInitStruct.PageAddress = (uint32_t)&Settings;
+    EraseInitStruct.NbPages    	= 1;
+
+	HAL_FLASH_Unlock();
+	status = HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError);
+
+	if(status != HAL_OK)
+	{
+		HAL_FLASH_Lock();
+		return 0;
+	}
+	status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)&Settings, *((uint32_t*)newSettings));
+
+	if(status != HAL_OK)
+	{
+		HAL_FLASH_Lock();
+		return 0;
+	}
+
+	HAL_FLASH_Lock();
+
+	return 1;
+}
+
 /* USER CODE END 4 */
 
 /**
