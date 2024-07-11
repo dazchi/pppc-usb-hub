@@ -87,10 +87,10 @@ uint8_t portCtrlState = 0;
 uint8_t portCtrlFlag = 0x00;
 
 __attribute__((section(".persist_data"))) DeviceSettings_t Settings = {
-		.usb1 =		{ .defaultState = 1, .groupControl = 1, .polarity = 0 },
-		.usb2 = 	{ .defaultState = 1, .groupControl = 1, .polarity = 0 },
-		.usb3 = 	{ .defaultState = 1, .groupControl = 1, .polarity = 0 },
-		.relay = 	{ .defaultState = 0, .groupControl = 1, .polarity = 1 },
+		.usb1 =		{ .defaultState = 1, .groupControl = 1, .polarity = 1 },
+		.usb2 = 	{ .defaultState = 1, .groupControl = 1, .polarity = 1 },
+		.usb3 = 	{ .defaultState = 1, .groupControl = 1, .polarity = 1 },
+		.relay = 	{ .defaultState = 0, .groupControl = 1, .polarity = 0 },
 };
 /* USER CODE END PV */
 
@@ -240,49 +240,49 @@ void Port_Ctrl_Handler() {
 	switch (portCtrlFlag) {
 	case 0x01:
 		if(Settings.usb1.groupControl){
-			HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, Settings.usb1.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, ~Settings.usb1.polarity & 0x1);
 		}
 		portCtrlFlag += 1;
 		break;
 	case 0x02:
 		if(Settings.usb2.groupControl){
-			HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, Settings.usb2.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, ~Settings.usb2.polarity & 0x1);
 		}
 		portCtrlFlag += 1;
 		break;
 	case 0x03:
 		if(Settings.usb3.groupControl){
-			HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, Settings.usb3.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, ~Settings.usb3.polarity & 0x1);
 		}
 		portCtrlFlag += 1;
 		break;
 	case 0x04:
 		if(Settings.relay.groupControl){
-			HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, Settings.relay.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, ~Settings.relay.polarity & 0x1);
 		}
 		portCtrlFlag = 0x00;
 		break;
 	case 0x11:
 		if(Settings.usb1.groupControl){
-			HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, ~Settings.usb1.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, USB1_EN_PIN, Settings.usb1.polarity & 0x1);
 		}
 		portCtrlFlag += 1;
 		break;
 	case 0x12:
 		if(Settings.usb2.groupControl){
-			HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, ~Settings.usb2.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, USB2_EN_PIN, Settings.usb2.polarity & 0x1);
 		}
 		portCtrlFlag += 1;
 		break;
 	case 0x13:
 		if(Settings.usb3.groupControl){
-			HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, ~Settings.usb3.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, USB3_EN_PIN, Settings.usb3.polarity & 0x1);
 		}
 		portCtrlFlag += 1;
 		break;
 	case 0x14:
 		if(Settings.relay.groupControl){
-			HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, ~Settings.relay.polarity & 0x1);
+			HAL_GPIO_WritePin(GPIOA, RELAY_EN_PIN, Settings.relay.polarity & 0x1);
 		}
 		portCtrlFlag = 0x00;
 		break;
